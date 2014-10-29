@@ -1,0 +1,411 @@
+package com.omr.app.userinterface;
+
+import java.awt.FlowLayout;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableModel;
+
+import au.com.bytecode.opencsv.CSVWriter;
+
+
+
+public class MainFrame extends JFrame {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private JPanel contentPane;
+	private JTextField BrowseFolderTextField;
+	private JTable QrDecodeTable;
+	BufferedImage sourceImage;
+	JLabel sourceImageLabel,RedLabel,GreenLabel;
+	JFileChooser chooser;	
+	JMenuItem openMenu;
+	File[] files;
+	DefaultTableModel QrCodeTableModel;
+	JRadioButton NoRadioButton;
+	JRadioButton YesRadioButton;
+	File folder;
+	ProgressDialog dialog;
+	JButton BrowseFolderButton,ScanButton;
+	private JTextField RedTextField;
+	private JTextField GreenTextField;
+	private JTextField BlueTextFiled;
+	private JTextField ThresholdTextField;
+	private JTextField PercentageTextField;
+	CSVWriter writer;
+
+	/**
+	 * Launch the application.
+	 * @throws IOException 
+	 */
+	/*public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+					MainFrame frame = new MainFrame();
+					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}*/
+	public void AddRowToTable(String ScanSheetName,String DecodedString,String SuccessOrFailure )
+	{
+		QrCodeTableModel.addRow(new Object[]{ScanSheetName,DecodedString,new JLabel(SuccessOrFailure)});
+		
+		writer.writeNext(new String[] {ScanSheetName,DecodedString,SuccessOrFailure});
+		
+	
+	}
+	public void closeExcel() throws IOException{
+		writer.close();
+	};
+	public void SetProgressBarValue(int value)
+	{
+		dialog.SetProgressBar(value);
+	}
+    public void setDirectoryFolder(File folder)
+    {
+    	this.folder=folder;
+    }
+    public File getDirectoryFolder()
+    {
+    	return folder;
+    }
+    public JButton getBrowseButton()
+    {
+    	return BrowseFolderButton;
+    }
+    public JButton getStartScanButton()
+    {
+    	return ScanButton;
+    }
+	public void doNothing() {
+		ScanButton.setEnabled(false);
+	}
+	public void doCancel() {
+		ScanButton.setEnabled(true);
+	}
+	public JButton getCancel(){
+		return dialog.getCancelButton();
+	}
+	public boolean isChecked(){
+		if( YesRadioButton.isSelected() )
+		return true;
+		return false;
+	}
+
+	/**
+	 * Create the frame.
+	 * @throws IOException 
+	 */
+	public MainFrame() throws IOException {
+		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\dell\\Pictures\\TeleTaleem\\TeleTaleem-50x50.jpg"));
+		setTitle("Scan Sheets ");
+		writer = new CSVWriter(new FileWriter("yourfile2.csv"));
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100, 100, 450, 554);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+		
+		JPanel BrowseFolderPanel = new JPanel();
+		BrowseFolderPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Select Folder", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		BrowseFolderPanel.setBounds(10, 32, 403, 116);
+		contentPane.add(BrowseFolderPanel);
+		BrowseFolderPanel.setLayout(null);
+		
+		JLabel lblNewLabel = new JLabel("Folder:");
+		lblNewLabel.setBounds(10, 22, 50, 25);
+		lblNewLabel.setHorizontalAlignment(SwingConstants.LEFT);
+		BrowseFolderPanel.add(lblNewLabel);
+		
+		BrowseFolderTextField = new JTextField();
+		BrowseFolderTextField.setBounds(60, 22, 195, 25);
+		BrowseFolderPanel.add(BrowseFolderTextField);
+		BrowseFolderTextField.setColumns(10);
+		
+		QrDecodeTable = new JTable();
+		String header[] = new String[] { "Sheet Name", "Serial Number", "Status" };
+		QrCodeTableModel=new MyModel();
+		QrCodeTableModel.setColumnIdentifiers(header);
+		QrDecodeTable.setModel(QrCodeTableModel);
+		QrDecodeTable.getColumnModel().getColumn(1).setPreferredWidth(87);
+		QrDecodeTable.getColumnModel().getColumn(2).setPreferredWidth(138);
+		QrDecodeTable.setDefaultRenderer(JLabel.class, new CustomCellRenderer());
+		QrDecodeTable.setBounds(16, 203, 362, 16);
+		
+		BrowseFolderButton = new JButton("Browse");
+//		BrowseFolderButton.addActionListener(new ActionListener() {
+//			public void actionPerformed(ActionEvent arg0) {
+//				
+//				JFileChooser chooser = new JFileChooser();
+//				chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+//				chooser.setDialogTitle("Select target directory");
+//				int returnVal = chooser.showOpenDialog(contentPane);
+//				if(returnVal == JFileChooser.APPROVE_OPTION) {
+//				folder=chooser.getSelectedFile();
+//				BrowseFolderTextField.setText(folder.toString());
+//				setDirectoryFolder(folder);
+//				files=folder.listFiles();
+//				}
+//			}
+//		});
+		BrowseFolderButton.setBounds(265, 22, 84, 25);
+		BrowseFolderPanel.add(BrowseFolderButton);
+		
+		ButtonGroup group=new ButtonGroup();
+		
+		YesRadioButton = new JRadioButton("Yes");
+		YesRadioButton.setBounds(30, 86, 61, 23);
+		group.add(YesRadioButton);
+		BrowseFolderPanel.add(YesRadioButton);
+		
+		
+		JLabel SerialNumberLabel = new JLabel("Do you want to manually enter Serial Number?");
+		SerialNumberLabel.setBounds(20, 65, 235, 14);
+		BrowseFolderPanel.add(SerialNumberLabel);
+		
+		NoRadioButton = new JRadioButton("No");
+		NoRadioButton.setBounds(90, 86, 95, 23);
+		NoRadioButton.setSelected(true);
+		group.add(NoRadioButton);
+		BrowseFolderPanel.add(NoRadioButton);
+		
+		JScrollPane scrollPane = new JScrollPane(QrDecodeTable);
+		scrollPane.setBounds(10, 159, 403, 195);
+		contentPane.add(scrollPane);
+		JPanel panel = new JPanel();
+		panel.setBorder(new TitledBorder(null, "Optical Mark Recognition Grey Scale", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		panel.setBounds(10, 365, 403, 53);
+		contentPane.add(panel);
+		panel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+		
+		RedLabel = new JLabel("Red");
+		panel.add(RedLabel);
+		
+		RedTextField = new JTextField();
+		panel.add(RedTextField);
+		RedTextField.setColumns(10);
+		
+		GreenLabel = new JLabel("Green");
+		panel.add(GreenLabel);
+		
+		GreenTextField = new JTextField();
+		panel.add(GreenTextField);
+		GreenTextField.setColumns(10);
+		
+		JLabel BlueLabel = new JLabel("Blue");
+		panel.add(BlueLabel);
+		
+		BlueTextFiled = new JTextField();
+		panel.add(BlueTextFiled);
+		BlueTextFiled.setColumns(10);
+		
+		JPanel panel_1 = new JPanel();
+		panel_1.setBorder(new TitledBorder(null, "Threshold Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		panel_1.setBounds(10, 423, 403, 53);
+		contentPane.add(panel_1);
+		
+		JLabel ThresholdLabel = new JLabel("Threshold");
+		panel_1.add(ThresholdLabel);
+		
+		ThresholdTextField = new JTextField();
+		panel_1.add(ThresholdTextField);
+		ThresholdTextField.setColumns(10);
+		
+		JLabel PercentageLabel = new JLabel("Percentage");
+		panel_1.add(PercentageLabel);
+		
+		PercentageTextField = new JTextField();
+		panel_1.add(PercentageTextField);
+		PercentageTextField.setColumns(10);
+	
+		ScanButton = new JButton("Start Scan");
+		ScanButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				dialog = new ProgressDialog();
+				dialog.setVisible(true);
+			}
+		});
+		ScanButton.setBounds(165, 476, 94, 40);
+		contentPane.add(ScanButton);
+		
+		JMenuBar menuBar = new JMenuBar();
+		menuBar.setBounds(0, 0, 434, 21);
+		contentPane.add(menuBar);
+		
+		JMenu FileMenuItem = new JMenu("File");
+		FileMenuItem.setHorizontalAlignment(SwingConstants.LEFT);
+		menuBar.add(FileMenuItem);
+		
+		JMenu mntmOptions = new JMenu("Options");
+		menuBar.add(mntmOptions);
+		
+		JMenuItem HelpMenuItem = new JMenuItem("Help");
+		HelpMenuItem.setIcon(new ImageIcon("C:\\Users\\dell\\Pictures\\TeleTaleem\\Help_Circle_Blue.png"));
+		mntmOptions.add(HelpMenuItem);
+		HelpMenuItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				try {
+					Process p=Runtime.getRuntime().exec("notepad Document.txt" );
+				
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
+		});
+		
+		JMenuItem OpenSubOption=new JMenuItem("Open");
+		OpenSubOption.setIcon(new ImageIcon("C:\\Users\\dell\\Pictures\\TeleTaleem\\my_received_files.png"));
+		OpenSubOption.getPreferredSize();
+		FileMenuItem.add(OpenSubOption);
+		MouseListener ml = new MouseListener(){
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				 ((JMenu)e.getSource()).doClick();
+				
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+		   
+		  };
+		  mntmOptions.addMouseListener(ml);
+		  FileMenuItem.addMouseListener(ml);
+		
+		
+			
+	}
+	public File[] getImageFiles()
+	{
+		return this.files;
+	}
+	public JButton getCancelButton(){
+		return dialog.getCancelButton();
+	}
+	public String getCodeFromUser(String iconPath){
+		ManualSerialNumberFrame frame=new ManualSerialNumberFrame(this,iconPath);
+		frame.setVisible(true);
+		return frame.getCode();
+	}
+
+	public JTextField getRedTextField() {
+		return RedTextField;
+	}
+
+	public void setRedTextField(JTextField redTextField) {
+		RedTextField = redTextField;
+	}
+
+	public JTextField getGreenTextField() {
+		return GreenTextField;
+	}
+
+	public void setGreenTextField(JTextField greenTextField) {
+		GreenTextField = greenTextField;
+	}
+
+	public JTextField getBlueTextFiled() {
+		return BlueTextFiled;
+	}
+
+	public void setBlueTextFiled(JTextField blueTextFiled) {
+		BlueTextFiled = blueTextFiled;
+	}
+
+	public JTextField getThresholdTextField() {
+		return ThresholdTextField;
+	}
+
+	public void setThresholdTextField(JTextField thresholdTextField) {
+		ThresholdTextField = thresholdTextField;
+	}
+
+	public JTextField getPercentageTextField() {
+		return PercentageTextField;
+	}
+
+	public void setPercentageTextField(JTextField percentageTextField) {
+		PercentageTextField = percentageTextField;
+	}
+
+	public void SetNumerator(int numerator)
+    {
+    	String temp=dialog.CounterLabel.getText();
+    	String[] array=temp.split("/");
+    	dialog.CounterLabel.setText(numerator+"/"+array[1]);
+    }
+    
+    public void SetTotalCounter(int counter)
+    {
+    	dialog.CounterLabel.setText("0/"+counter);
+    }
+	public void setFolderPath(String string) {
+		BrowseFolderTextField.setText(string);
+		
+	}
+	public void closeFiles() throws IOException {
+		writer.close();
+		
+	}
+}
+
+
